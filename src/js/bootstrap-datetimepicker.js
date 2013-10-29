@@ -554,7 +554,10 @@
       e.preventDefault();
       this._unset = false;
       var target = $(e.target).closest('span, td, th');
-      if (target.length === 1) {
+      // a hack code to fix skipping of months, date
+      var scope = angular.element(target).scope();
+      if (scope && target.length === 1 && !scope.isFirstTime) {
+        scope.isFirstTime = true;
         if (! target.is('.disabled')) {
           switch(target[0].nodeName.toLowerCase()) {
             case 'th':
@@ -634,32 +637,89 @@
               break;
           }
         }
+      }else if(scope){
+        delete angular.element(target).scope().isFirstTime;
       }
     },
 
     actions: {
       incrementHours: function(e) {
-        this._date.setUTCHours(this._date.getUTCHours() + 1);
+        // a hack code to fix skipping of hours, minutes, seconds
+        var scope = angular.element(e.target).scope();
+        var flag = ((e.timeStamp - scope.timeStamp) > 10 || !scope.timeStamp);
+        if (scope && (!scope.isFirstTime || flag)) {
+          scope.timeStamp = e.timeStamp;
+          scope.isFirstTime = true;
+          this._date.setUTCHours(this._date.getUTCHours() + 1);
+        }else if(scope){
+          delete angular.element(e.target).scope().isFirstTime;
+          delete angular.element(e.target).scope().timeStamp;
+        }
       },
 
       incrementMinutes: function(e) {
-        this._date.setUTCMinutes(this._date.getUTCMinutes() + 1);
+        var scope = angular.element(e.target).scope();
+        var flag = ((e.timeStamp - scope.timeStamp) > 10 || !scope.timeStamp);
+        if (scope && (!scope.isFirstTime || flag)) {
+          scope.timeStamp = e.timeStamp;
+          scope.isFirstTime = true;
+          this._date.setUTCMinutes(this._date.getUTCMinutes() + 1);
+        }else if(scope){
+          delete angular.element(e.target).scope().isFirstTime;
+          delete angular.element(e.target).scope().timeStamp;
+        } 
       },
 
       incrementSeconds: function(e) {
-        this._date.setUTCSeconds(this._date.getUTCSeconds() + 1);
+        var scope = angular.element(e.target).scope();
+        var flag = ((e.timeStamp - scope.timeStamp) > 10 || !scope.timeStamp);
+        if (scope && (!scope.isFirstTime || flag)) {
+          scope.timeStamp = e.timeStamp;
+          scope.isFirstTime = true;
+          this._date.setUTCSeconds(this._date.getUTCSeconds() + 1);
+        }else if(scope){
+          delete angular.element(e.target).scope().isFirstTime;
+          delete angular.element(e.target).scope().timeStamp;
+        } 
       },
 
       decrementHours: function(e) {
-        this._date.setUTCHours(this._date.getUTCHours() - 1);
+        var scope = angular.element(e.target).scope();
+        var flag = ((e.timeStamp - scope.timeStamp) > 10 || !scope.timeStamp);
+        if (scope && (!scope.isFirstTime || flag)) {
+          scope.timeStamp = e.timeStamp;
+          scope.isFirstTime = true;
+          this._date.setUTCHours(this._date.getUTCHours() - 1);
+        }else if(scope){
+          delete angular.element(e.target).scope().isFirstTime;
+          delete angular.element(e.target).scope().timeStamp;
+        } 
       },
 
       decrementMinutes: function(e) {
-        this._date.setUTCMinutes(this._date.getUTCMinutes() - 1);
+        var scope = angular.element(e.target).scope();
+        var flag = ((e.timeStamp - scope.timeStamp) > 10 || !scope.timeStamp);
+        if (scope && (!scope.isFirstTime || flag)) {
+          scope.timeStamp = e.timeStamp;
+          scope.isFirstTime = true;
+          this._date.setUTCMinutes(this._date.getUTCMinutes() - 1);
+        }else if(scope){
+          delete angular.element(e.target).scope().isFirstTime;
+          delete angular.element(e.target).scope().timeStamp;
+        } 
       },
 
       decrementSeconds: function(e) {
-        this._date.setUTCSeconds(this._date.getUTCSeconds() - 1);
+        var scope = angular.element(e.target).scope();
+        var flag = ((e.timeStamp - scope.timeStamp) > 10 || !scope.timeStamp);
+        if (scope && (!scope.isFirstTime || flag)) {
+          scope.timeStamp = e.timeStamp;
+          scope.isFirstTime = true;
+          this._date.setUTCSeconds(this._date.getUTCSeconds() - 1);
+        }else if(scope){
+          delete angular.element(e.target).scope().isFirstTime;
+          delete angular.element(e.target).scope().timeStamp;
+        } 
       },
 
       togglePeriod: function(e) {
@@ -849,14 +909,12 @@
         } else if (property === 'Period12') {
           if (d.getUTCHours() >= 12) return 'PM';
           else return 'AM';
-	} else if (property === 'UTCYear') {
-          rv = d.getUTCFullYear();
-          rv = rv.toString().substr(2);   
         } else {
           methodName = 'get' + property;
           rv = d[methodName]();
         }
         if (methodName === 'getUTCMonth') rv = rv + 1;
+        if (methodName === 'getUTCYear') rv = rv + 1900 - 2000;
         return padLeft(rv.toString(), len, '0');
       });
     },
